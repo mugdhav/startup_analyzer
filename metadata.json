@@ -1,0 +1,5 @@
+{
+  "name": "UnicornFinder MVP",
+  "description": "An AI-powered dashboard that evaluates startups based on their potential to become a 'unicorn'. Users can enter a startup name or URL to get an analysis covering founder strength, market potential, and technical innovation, complete with data sources and competitor landscape.",
+  "requestFramePermissions": []
+}
