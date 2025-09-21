@@ -1,16 +1,16 @@
 <div align="center">
-<img width="1200" height="475" alt="UnicornFinder Banner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+<img width="1200" height="475" alt="Startup Analyzer Banner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
 # Startup Analyzer MVP
 
 **AI-Powered Startup Evaluation for Venture Capitalists**
 
-UnicornFinder is an intelligent platform that automates the evaluation of startup potential using advanced AI analysis. It helps venture capitalists make data-driven investment decisions by analyzing publicly available information about startups and generating comprehensive unicorn potential scores.
+Startup Analyzer is an intelligent platform that automates the evaluation of startup potential using advanced AI analysis. It helps venture capitalists make data-driven investment decisions by analyzing publicly available information about startups and generating comprehensive unicorn potential scores.
 
 ## How It Solves the Problem
 
-Traditional startup evaluation is time-consuming, subjective, and often limited by human bias and information gaps. UnicornFinder addresses these challenges by:
+Traditional startup evaluation is time-consuming, subjective, and often limited by human bias and information gaps. Startup Analyzer addresses these challenges by:
 
 -   **Automating Research**: Uses AI to automatically gather and analyze publicly available data about startups, saving hours of manual research.
 -   **Standardizing Evaluation**: Provides consistent, objective scoring criteria across all startup evaluations.
@@ -22,7 +22,7 @@ Traditional startup evaluation is time-consuming, subjective, and often limited 
 
 **The only AI-powered platform that combines real-time web intelligence with standardized unicorn prediction scoring.**
 
--   **Real-time Intelligence**: Unlike static databases, UnicornFinder pulls the latest information from the web.
+-   **Real-time Intelligence**: Unlike static databases, Startup Analyzer pulls the latest information from the web.
 -   **AI-Native Approach**: Built from the ground up with AI at its core, not as an add-on feature.
 -   **Standardized Scoring**: Proprietary algorithm that converts qualitative insights into quantitative unicorn probability scores.
 -   **VC-Focused**: Specifically designed for venture capital workflows and decision-making processes.
