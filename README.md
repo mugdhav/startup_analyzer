@@ -112,4 +112,4 @@ Traditional startup evaluation is time-consuming, subjective, and often limited 
 
 ## Deployment
 
-View the live app in AI Studio: [https://ai.studio/apps/temp/2](https://ai.studio/apps/temp/2)
+View the live app in [AI Studio](https://ai.studio/apps/drive/13Tnccxgqyei9YdynNchT4N2MOPOiHWQq)
