@@ -1,5 +1,5 @@
 <div align="center">
-<img width="1200" height="600" alt="Startup Analyzer Dashboard" src="./startup-analyzer-dashboard.png" />
+<img width="1200" height="600" alt="Startup Analyzer Dashboard" src="./AppGitHubBanner.png" />
 </div>
 
 # Startup Analyzer MVP
