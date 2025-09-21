@@ -2,7 +2,7 @@
 import React from 'react';
 
 export const ProductIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-brand-secondary" {...props}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.311a12.06 12.06 0 00-4.5 0m3.75 2.311a12.06 12.06 0 01-4.5 0M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 256 256" {...props}>
+        <path d="M223.2,68.32,135.2,16.32a15.9,15.9,0,0,0-14.4,0L32.8,68.32A16,16,0,0,0,24,82.28v87.44a16,16,0,0,0,8.8,14L120.8,236a15.9,15.9,0,0,0,14.4,0l88-52.24a16,16,0,0,0,8.8-14V82.28A16,16,0,0,0,223.2,68.32ZM128,32.69l79.44,47-35.15,20.84L128,78.88,83.71,100.56,48.56,79.72ZM40,92.51,75.15,113.38,128,84.44l45.29,26.85-45.29,26.85-52.85-31.35L40,92.51Zm88,118.8L48,162.83v-58.5l35.15,20.84L128,154l44.29,26.26L128,211.31Z"></path>
     </svg>
 );

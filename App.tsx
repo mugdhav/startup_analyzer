@@ -1,7 +1,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { CompanyEvaluation } from './types';
-import { evaluateCompany } from './services/geminiService';
+import { evaluateCompany, extractInfoFromFiles } from './services/geminiService';
 import SearchBar from './components/SearchBar';
 import Dashboard from './components/Dashboard';
 import LoadingSpinner from './components/LoadingSpinner';
@@ -29,6 +29,7 @@ const App: React.FC = () => {
     const [evaluation, setEvaluation] = useState<CompanyEvaluation | null>(null);
     const [currentQuery, setCurrentQuery] = useState<string>('');
     const [searchHistory, setSearchHistory] = useState<string[]>([]);
+    const [loadingMessage, setLoadingMessage] = useState<string>('');
 
     useEffect(() => {
         try {
@@ -42,66 +43,79 @@ const App: React.FC = () => {
         }
     }, []);
 
-    const handleSearch = useCallback(async (query: string, file: File | null) => {
+    const handleSearch = useCallback(async (query: string, files: File[]) => {
         if (!query.trim() || isLoading) return;
 
         setIsLoading(true);
         setError(null);
         setEvaluation(null);
         setCurrentQuery(query);
+        setLoadingMessage(`Preparing analysis for ${query}...`);
 
         try {
-            let fileData: { mimeType: string; data: string } | null = null;
-            if (file) {
+            let extractedText: string | null = null;
+            if (files.length > 0) {
+                setLoadingMessage('Extracting key info from your documents...');
+                let filesData: { mimeType: string; data: string }[] = [];
                 try {
-                    const base64Data = await readFileAsBase64(file);
-                    fileData = {
-                        mimeType: file.type,
-                        data: base64Data,
-                    };
+                     filesData = await Promise.all(
+                        files.map(async (file) => {
+                            const base64Data = await readFileAsBase64(file);
+                            return {
+                                mimeType: file.type,
+                                data: base64Data,
+                            };
+                        })
+                    );
                 } catch (readError) {
-                    console.error("Error reading file:", readError);
-                    setError("Could not read the uploaded file. Please try again or select a different file.");
+                    console.error("Error reading files:", readError);
+                    setError("Could not read one or more of the uploaded files. Please try again.");
                     setIsLoading(false);
                     return;
                 }
+                
+                extractedText = await extractInfoFromFiles(filesData);
             }
 
-            const result = await evaluateCompany(query, fileData);
+            setLoadingMessage(`Performing AI analysis for ${query}...`);
+            const result = await evaluateCompany(query, extractedText);
             setEvaluation(result);
             
             const newHistory = [query, ...searchHistory.filter(item => item.toLowerCase() !== query.toLowerCase())].slice(0, 5);
             setSearchHistory(newHistory);
             localStorage.setItem('unicornFinderHistory', JSON.stringify(newHistory));
-
         } catch (err) {
             console.error(err);
-            setError('Failed to evaluate company. The model may be unavailable or the request timed out. Please try again.');
+            const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+            setError(`Failed to evaluate company. ${errorMessage} Please try again.`);
         } finally {
             setIsLoading(false);
+            setLoadingMessage('');
         }
     }, [isLoading, searchHistory]);
 
     return (
         <div className="min-h-screen bg-base-100 text-text-primary font-sans flex flex-col p-4 sm:p-6 lg:p-8">
-            <header className="w-full max-w-7xl mx-auto text-left py-2 mb-4">
-                 <div className="flex items-center gap-3">
-                    <LogoIcon className="h-10 w-10 text-brand-primary" />
-                    <div>
-                        <h1 className="text-2xl font-bold text-text-primary">UnicornFinder MVP</h1>
-                        <p className="text-sm text-text-secondary">AI-Powered Startup Evaluation for VCs</p>
-                    </div>
+            <header className="w-full max-w-4xl mx-auto text-center pt-6 pb-2">
+                <div className="flex items-center justify-center gap-4">
+                    <LogoIcon className="h-10 sm:h-12 w-10 sm:w-12 text-sky-400" />
+                    <h1 className="text-3xl sm:text-5xl font-bold text-text-primary tracking-tight">Startup Analyzer</h1>
                 </div>
+                <p className="text-md sm:text-lg text-text-secondary mt-4 max-w-2xl mx-auto">
+                    AI-powered, in-depth startup analysis for venture capitalists.
+                </p>
             </header>
 
-            <main className="w-full max-w-7xl mx-auto">
-                <SearchBar onSearch={handleSearch} isLoading={isLoading} recentSearches={searchHistory} />
+            <main className="w-full flex-grow flex flex-col items-center">
+                 <div className="w-full max-w-3xl mx-auto mt-4">
+                    <SearchBar onSearch={handleSearch} isLoading={isLoading} />
+                </div>
 
-                <div className="mt-8">
+                <div className="mt-8 w-full max-w-7xl mx-auto">
                     {isLoading && (
                         <div className="flex flex-col items-center justify-center gap-4 p-8">
                             <LoadingSpinner />
-                            <p className="text-lg text-text-secondary animate-pulse">Evaluating {currentQuery}...</p>
+                            <p className="text-lg text-text-secondary animate-pulse">{loadingMessage}</p>
                         </div>
                     )}
                     {error && (
@@ -113,12 +127,6 @@ const App: React.FC = () => {
                     {evaluation && !isLoading && (
                         <div className="animate-fade-in">
                             <Dashboard evaluation={evaluation} />
-                        </div>
-                    )}
-                    {!isLoading && !error && !evaluation && (
-                        <div className="text-center p-8 bg-base-200/50 rounded-lg border border-base-300">
-                            <h2 className="text-2xl font-semibold mb-2">Welcome to UnicornFinder</h2>
-                            <p className="text-text-secondary">Enter a startup name or URL above to begin your analysis.</p>
                         </div>
                     )}
                 </div>

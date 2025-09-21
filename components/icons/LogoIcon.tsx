@@ -2,8 +2,12 @@
 import React from 'react';
 
 export const LogoIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}>
-      <path fillRule="evenodd" d="M12.963 2.286a.75.75 0 00-1.071 1.071L12 4.432a8.25 8.25 0 01-.994 13.042L3.75 21.75a.75.75 0 001.06 1.06l4.688-4.688a8.25 8.25 0 0110.151-2.282.75.75 0 10.842-1.22l-1.474-1.01a.75.75 0 00-1.22.842 6.75 6.75 0 00-8.307 1.868l-1.03-1.03.1-.101a.75.75 0 00-1.06-1.06l-.102.101-1.03-1.03a6.75 6.75 0 001.868-8.307.75.75 0 00.842-1.22l-1.01-1.474a.75.75 0 00-1.22.842 8.25 8.25 0 01-2.282 10.151l-4.688 4.688a.75.75 0 001.06 1.06l7.25-7.25a8.25 8.25 0 0113.042-.994L21.714 9.03a.75.75 0 10-1.071-1.071l-1.051.963a6.75 6.75 0 00-9.22-9.22l.963-1.05z" clipRule="evenodd" />
-      <path d="M11.25 5.25a.75.75 0 01.75-.75h.008a.75.75 0 01.75.75v.008a.75.75 0 01-.75.75h-.008a.75.75 0 01-.75-.75V5.25z" />
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+        <path d="M9.17 6.27c-1.52-1-3.52-0.74-4.82 0.56s-1.66 3.3-0.56 4.82c1.1 1.52 3.1 1.94 4.62 0.94" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M14.83 6.27c1.52-1 3.52-0.74 4.82 0.56s1.66 3.3 0.56 4.82c-1.1 1.52-3.1 1.94-4.62 0.94" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M12 14.25c-1.79 0-3.25 1.46-3.25 3.25s1.46 3.25 3.25 3.25 3.25-1.46 3.25-3.25S13.79 14.25 12 14.25Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M12 14.25v-2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M9.25 11.5L7.75 9.75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M14.75 11.5l1.5-1.75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
 );

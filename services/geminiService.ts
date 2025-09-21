@@ -1,7 +1,65 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import type { CompanyEvaluation } from '../types';
 
+if (!process.env.API_KEY) {
+    throw new Error("API_KEY environment variable not set.");
+}
+
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+
+export const extractInfoFromFiles = async (
+    files: { mimeType: string; data: string }[]
+): Promise<string> => {
+    if (!files || files.length === 0) {
+        return "";
+    }
+
+    try {
+        const prompt = `
+You are a document analysis expert. From the provided document(s), extract all information relevant to the following categories for a startup evaluation.
+Focus on concrete facts, figures, and statements.
+
+1.  **Founder Analysis**: Extract information about the founding team's experience, past successes (e.g., previous companies, exits), education, and specific domain expertise.
+2.  **Market Analysis**: Extract details on the target market size (TAM, SAM, SOM), growth potential (e.g., CAGR), customer segments, and the company's go-to-market strategy or traction.
+3.  **Technical Analysis**: Extract descriptions of the product's underlying technology, architecture, key innovative features, and any mentions of intellectual property, patents, or defensibility.
+4.  **Competitor Analysis**: Extract any information that identifies key competitors, competitive advantages, or the startup's unique selling propositions and differentiation.
+
+Collate all extracted information into a single, structured block of text. If no relevant information is found for a category, state "No information found in documents." under that category's heading. Do not summarize, analyze, or create new information; only extract relevant text verbatim or as close as possible.
+`;
+
+        const contents: any[] = [{ text: prompt }];
+
+        for (const file of files) {
+            contents.push({
+                inlineData: {
+                    mimeType: file.mimeType,
+                    data: file.data,
+                },
+            });
+        }
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: { parts: contents },
+        });
+        
+        const extractedText = response.text.trim();
+
+        if (!extractedText) {
+            // It's better to return an empty string and let the next step decide,
+            // rather than throwing an error if a document is irrelevant.
+            return "No relevant information could be extracted from the provided documents.";
+        }
+
+        return extractedText;
+
+    } catch (error) {
+        console.error("Error extracting information from files with Gemini:", error);
+        throw new Error("Failed to process documents with the AI service.");
+    }
+};
+
 
 const analysisItemSchema = {
     type: Type.OBJECT,
@@ -90,13 +148,13 @@ const evaluationSchema = {
 
 export const evaluateCompany = async (
     companyName: string,
-    fileContent: { mimeType: string; data: string } | null
+    extractedText: string | null
 ): Promise<CompanyEvaluation> => {
     try {
         const prompt = `
 You are an expert venture capitalist analyst called "UnicornFinder". Your task is to provide a detailed, data-driven evaluation of a startup.
 For the company "${companyName}", produce a comprehensive analysis.
-${fileContent ? 'Use the content of the provided document as a primary source of information, supplementing this with your own knowledge and other publicly available data.' : 'Base your analysis on publicly available information.'}
+${extractedText ? `Use your own knowledge and other publicly available data, supplementing this with the following extracted information from documents provided by the user:\n\n---EXTRACTED INFORMATION---\n${extractedText}\n---END EXTRACTED INFORMATION---` : 'Base your analysis on publicly available information.'}
 
 Your evaluation must be structured into four key areas:
 1.  **Founder Analysis**: Evaluate the founding team's experience, past successes, and domain expertise.
@@ -109,7 +167,7 @@ For each of these four areas, provide:
 - A single, concise summary sentence.
 - A list of 2-3 specific strengths (pros), as short phrases.
 - A list of 2-3 specific weaknesses (cons), as short phrases.
-- A list of 1-2 relevant data sources specifically for that area's analysis.
+- A list of relevant data sources used that area's analysis regarding the startup. If providing links as data sources, use only actual links of the sources where you found the start-up relevant information. Don't add any links that lead to dubious, unsecured websites or 404 errors. Prioritize links of SSL or HTTPS secured sites. 
 
 Additionally, provide:
 - The company's primary **Industry** (e.g., 'Fintech', 'SaaS').
@@ -119,17 +177,8 @@ Additionally, provide:
 
 Your response MUST be a single JSON object that strictly adheres to the provided schema. Do not include any text, explanations, or markdown formatting outside of the JSON object.
 `;
-        // Fix: Explicitly type `contents` as `any[]` to allow pushing different part types, resolving a type inference issue.
-        const contents: any[] = [{ text: prompt }];
-
-        if (fileContent) {
-            contents.push({
-                inlineData: {
-                    mimeType: fileContent.mimeType,
-                    data: fileContent.data,
-                },
-            });
-        }
+        
+        const contents = [{ text: prompt }];
 
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
@@ -141,11 +190,24 @@ Your response MUST be a single JSON object that strictly adheres to the provided
         });
 
         const jsonText = response.text.trim();
-        const parsedData = JSON.parse(jsonText) as CompanyEvaluation;
-        return parsedData;
+        
+        if (!jsonText) {
+            throw new Error("Received an empty response from the AI service.");
+        }
+
+        try {
+            return JSON.parse(jsonText) as CompanyEvaluation;
+        } catch (parseError) {
+            console.error("Failed to parse JSON response from Gemini:", parseError);
+            console.error("Raw response text:", jsonText);
+            throw new Error("The AI service returned a response that was not valid JSON.");
+        }
 
     } catch (error) {
         console.error("Error evaluating company with Gemini:", error);
+        if (error instanceof Error) {
+            throw error; // Re-throw the specific error for the UI to catch
+        }
         throw new Error("Failed to parse or receive evaluation from AI service.");
     }
 };

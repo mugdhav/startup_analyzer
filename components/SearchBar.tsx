@@ -1,156 +1,161 @@
-import React, { useState, useRef } from 'react';
-import { SearchIcon } from './icons/SearchIcon';
+import React, { useState, useRef, useCallback } from 'react';
 import { UploadIcon } from './icons/UploadIcon';
-import { XCircleIcon } from './icons/XCircleIcon';
-
+import { TrashIcon } from './icons/TrashIcon';
+import { DocumentIcon } from './icons/DocumentIcon';
 
 interface SearchBarProps {
-    onSearch: (query: string, file: File | null) => void;
+    onSearch: (query: string, files: File[]) => void;
     isLoading: boolean;
-    recentSearches: string[];
 }
 
-const MAX_FILE_SIZE_MB = 10;
-const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+const MAX_TOTAL_SIZE_MB = 20;
+const MAX_TOTAL_SIZE_BYTES = MAX_TOTAL_SIZE_MB * 1024 * 1024;
 const ALLOWED_FILE_TYPES = [
     'application/pdf',
-    'text/plain',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
-    'application/msword', // .doc
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation', // .pptx
 ];
-const ALLOWED_FILE_EXTENSIONS = ".pdf, .txt, .doc, .docx, .pptx";
+const ALLOWED_FILE_EXTENSIONS = ".pdf,.docx";
 
-
-const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading, recentSearches }) => {
+const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading }) => {
     const [query, setQuery] = useState('');
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [fileError, setFileError] = useState<string | null>(null);
+    const [files, setFiles] = useState<File[]>([]);
+    const [error, setError] = useState<string | null>(null);
+    const [isDragOver, setIsDragOver] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const totalSize = files.reduce((acc, file) => acc + file.size, 0);
+
+    const handleFileChange = (selectedFiles: FileList | null) => {
+        if (!selectedFiles) return;
+        
+        setError(null);
+        const newFiles = [...files];
+        let currentSize = totalSize;
+
+        for (const file of Array.from(selectedFiles)) {
+            if (!newFiles.some(f => f.name === file.name && f.size === file.size)) {
+                if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+                    setError(`Invalid file type: ${file.name}. Only PDF and DOCX are allowed.`);
+                    continue;
+                }
+
+                if (currentSize + file.size > MAX_TOTAL_SIZE_BYTES) {
+                    setError(`Total file size cannot exceed ${MAX_TOTAL_SIZE_MB}MB.`);
+                    break; 
+                }
+                newFiles.push(file);
+                currentSize += file.size;
+            }
+        }
+        setFiles(newFiles);
+    };
+
+    const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragOver(true); }, []);
+    const handleDragLeave = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragOver(false); }, []);
+    const handleDrop = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(false);
+        if (e.dataTransfer.files) {
+            handleFileChange(e.dataTransfer.files);
+        }
+    }, [files, totalSize]);
+
+    const removeFile = (indexToRemove: number) => {
+        setFiles(files.filter((_, index) => index !== indexToRemove));
+        setError(null);
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSearch(query, selectedFile);
-    };
-
-    const handleRecentClick = (company: string) => {
-        setQuery(company);
-        onSearch(company, selectedFile);
-    };
-
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (event.target) {
-            event.target.value = ''; // Allow re-selecting the same file
-        }
-        if (!file) return;
-
-        setFileError(null);
-
-        if (file.size > MAX_FILE_SIZE_BYTES) {
-            setFileError(`File is too large. Max size is ${MAX_FILE_SIZE_MB}MB.`);
-            setSelectedFile(null);
-            return;
-        }
-
-        if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-            // Fix: Replace `replaceAll` with `replace` and a global regex for broader compatibility.
-            setFileError(`Invalid file type. Please upload one of: ${ALLOWED_FILE_EXTENSIONS.replace(/ /g, '')}.`);
-            setSelectedFile(null);
-            return;
-        }
-
-        setSelectedFile(file);
-    };
-
-    const triggerFileSelect = () => {
-        fileInputRef.current?.click();
-    };
-
-    const clearFile = () => {
-        setSelectedFile(null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-        }
+        if (!query.trim()) return;
+        onSearch(query, files);
     };
 
     return (
-        <div className="w-full">
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                <div className="flex gap-2">
-                    <div className="relative flex-grow">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <SearchIcon className="h-5 w-5 text-gray-400" />
-                        </div>
-                        <input
-                            type="text"
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
-                            placeholder="Enter a startup name or website URL..."
-                            className="w-full pl-10 pr-4 py-3 bg-base-200 border border-base-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-brand-primary outline-none transition-all"
-                            disabled={isLoading}
-                        />
-                    </div>
-                    <button
-                        type="submit"
-                        className="bg-brand-primary hover:bg-brand-primary/90 text-white font-bold py-3 px-6 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                        disabled={isLoading || !query.trim()}
-                    >
-                        Evaluate
-                    </button>
-                </div>
-                
+        <div className="bg-base-200 p-6 sm:p-8 rounded-2xl border border-base-300 w-full max-w-3xl mx-auto shadow-lg animate-fade-in">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                 <div>
-                    <label className="block text-sm font-medium text-text-secondary mb-2">
-                        Add additional documents - pitch decks, reports, documents (max 10MB)
+                    <label htmlFor="startup-name" className="block text-sm font-medium text-text-secondary mb-2">
+                        Enter Startup Name or Website <span className="text-red-500">*</span>
                     </label>
-                    <div className="flex items-center gap-2">
-                         <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handleFileChange}
-                            className="hidden"
-                            accept={ALLOWED_FILE_EXTENSIONS}
-                            disabled={isLoading}
-                        />
-                        {!selectedFile ? (
-                            <button
-                                type="button"
-                                onClick={triggerFileSelect}
-                                disabled={isLoading}
-                                className="bg-base-300 hover:bg-base-300/80 text-text-primary font-bold py-2 px-4 rounded-lg transition-all disabled:opacity-50 flex items-center gap-2"
-                            >
-                                <UploadIcon className="w-5 h-5" />
-                                <span>Upload</span>
-                            </button>
-                        ) : (
-                             <div className="flex-grow flex items-center gap-2 bg-base-200 p-2 rounded-lg border border-base-300 min-w-0">
-                               <span className="text-text-secondary truncate flex-grow pl-2">{selectedFile.name}</span>
-                               <button onClick={clearFile} type="button" disabled={isLoading} className="text-gray-400 hover:text-white p-1 flex-shrink-0">
-                                   <XCircleIcon className="w-5 h-5"/>
-                               </button>
-                            </div>
-                        )}
-                    </div>
-                    {fileError && <p className="text-red-400 text-sm mt-2 animate-fade-in">{fileError}</p>}
+                    <input
+                        id="startup-name"
+                        type="text"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="e.g., 'Kredily' or 'www.kredily.com'"
+                        className="w-full px-4 py-3 bg-base-300 border border-transparent rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-all text-text-primary"
+                        disabled={isLoading}
+                        required
+                    />
                 </div>
 
-            </form>
-            {recentSearches.length > 0 && (
-                <div className="flex flex-wrap items-center justify-center gap-2 mt-4 text-sm">
-                    <span className="text-text-secondary mr-2">Recent:</span>
-                    {recentSearches.map((company) => (
-                        <button
-                            key={company}
-                            onClick={() => handleRecentClick(company)}
-                            disabled={isLoading}
-                            className="bg-base-300/50 hover:bg-base-300 text-text-secondary px-3 py-1 rounded-full transition-colors disabled:opacity-50"
-                        >
-                            {company}
-                        </button>
-                    ))}
+                <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-2">Upload Startup Documents - coming soon</label>
+                    <div
+                        className={`relative block w-full border-2 border-dashed rounded-lg p-8 text-center transition-colors border-base-300 opacity-50 cursor-not-allowed`}
+                        role="button"
+                        aria-label="File upload area - coming soon"
+                    >
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={(e) => {
+                                handleFileChange(e.target.files);
+                                e.target.value = ''; // Allow re-selecting the same file
+                            }}
+                            className="hidden"
+                            accept={ALLOWED_FILE_EXTENSIONS}
+                            multiple
+                            disabled
+                        />
+                        <div className="flex flex-col items-center">
+                            <UploadIcon className="mx-auto h-10 w-10 text-gray-400" />
+                            <span className="mt-2 block text-sm font-semibold text-sky-500">
+                                Click to upload <span className="text-text-secondary font-normal">or drag and drop</span>
+                            </span>
+                            <p className="text-xs text-gray-500 mt-1">PDF or DOCX (Max 20MB total)</p>
+                        </div>
+                    </div>
                 </div>
-            )}
+                
+                {error && <p className="text-red-400 text-sm animate-fade-in -mt-2">{error}</p>}
+
+                {files.length > 0 && (
+                    <div className="space-y-3">
+                        <h3 className="text-sm font-medium text-text-secondary">
+                            Selected files: ({(totalSize / 1024 / 1024).toFixed(2)}MB)
+                        </h3>
+                        <ul className="space-y-2">
+                            {files.map((file, index) => (
+                                <li key={`${file.name}-${file.lastModified}`} className="flex items-center justify-between bg-base-300 p-2 pl-3 rounded-lg text-sm animate-fade-in">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <DocumentIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                                        <span className="truncate text-text-primary">{file.name}</span>
+                                    </div>
+                                    <button 
+                                      type="button" 
+                                      onClick={() => removeFile(index)} 
+                                      disabled={isLoading} 
+                                      className="text-gray-500 hover:text-red-400 p-1 flex-shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500"
+                                      aria-label={`Remove ${file.name}`}
+                                    >
+                                        <TrashIcon className="w-5 h-5" />
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+                
+                <button
+                    type="submit"
+                    className="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-6 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-base focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-base-200 focus:ring-sky-500"
+                    disabled={isLoading || !query.trim()}
+                >
+                    {isLoading ? 'Analyzing...' : 'Analyze Startup'}
+                </button>
+            </form>
         </div>
     );
 };

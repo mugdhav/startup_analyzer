@@ -2,8 +2,7 @@
 import React from 'react';
 
 export const BreakdownIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-brand-secondary" {...props}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6a7.5 7.5 0 100 15 7.5 7.5 0 000-15z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 10.5c0-1.141-.448-2.186-1.172-2.929m1.172 2.929c-1.141 0-2.186-.448-2.929-1.172m2.929 1.172A4.5 4.5 0 0115 6m-4.5 4.5V6" />
+    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 256 256" {...props}>
+        <path d="M128,32a96,96,0,1,0,96,96A96.11,96.11,0,0,0,128,32Zm0,176a80,80,0,1,1,80-80A80.09,80.09,0,0,1,128,208Zm88-88.46V128a8,8,0,0,1-8,8H136a8,8,0,0,1-8-8V48a8,8,0,0,1,16,0v71.54A80.07,80.07,0,0,1,141.25,43a8,8,0,1,1,7.5,13.92A64,64,0,0,0,136,116.69V120h3.31A64,64,0,0,0,200,64a8,8,0,0,1,13.92,7.5A80.07,80.07,0,0,1,216,119.54Z"></path>
     </svg>
 );
