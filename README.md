@@ -70,6 +70,7 @@ Traditional startup evaluation is time-consuming, subjective, and often limited 
 
 -   **Google Gemini AI**: Advanced language model for content analysis and scoring.
 -   **Google Search**: Real-time web data collection and information gathering via Gemini grounding.
+-   **Google Gen AI SDK - Python**: Libraries to access Gemini AI and Google Search services.
 
 ### Development Tools
 
